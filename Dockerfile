@@ -1,4 +1,4 @@
-FROM ubuntu:saucy
+FROM ubuntu:trusty
 MAINTAINER dz0ny@ubuntu.si
 
 RUN apt-get -y -q update && apt-get -y -q upgrade
@@ -46,7 +46,7 @@ RUN bundle install &&\
 # Install runner
 RUN wget https://godist.herokuapp.com/projects/ddollar/forego/releases/current/linux-amd64/forego -O /usr/bin/forego; chmod +x  /usr/bin/forego
 # Add postgres to procfile
-RUN echo "db: su postgres -c '/usr/lib/postgresql/9.1/bin/postgres -D /var/lib/postgresql/9.1/main -c config_file=/etc/postgresql/9.1/main/postgresql.conf'" >> Procfile
+RUN echo "db: su postgres -c '/usr/lib/postgresql/9.3/bin/postgres -D /var/lib/postgresql/9.3/main -c config_file=/etc/postgresql/9.3/main/postgresql.conf'" >> Procfile
 # expose data to host for backup
 VOLUME  ["/etc/postgresql", "/var/log/postgresql", "/var/lib/postgresql"]
 
