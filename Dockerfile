@@ -18,10 +18,19 @@ RUN /etc/init.d/postgresql start &&\
     /etc/init.d/postgresql stop
 
 USER root
-ADD . /srv
 WORKDIR /srv
 EXPOSE 5000
 ENV RACK_ENV production
+
+# Install runner
+RUN wget https://godist.herokuapp.com/projects/ddollar/forego/releases/current/linux-amd64/forego -O /usr/bin/forego; chmod +x  /usr/bin/forego
+
+# Bundler
+ADD Gemfile Gemfile.lock /srv/
+RUN echo "gem: --no-rdoc --no-ri" > ~/.gemrc
+RUN bundle install
+
+ADD . /srv
 
 # Configure database
 RUN ( echo 'production:' && \
@@ -35,16 +44,14 @@ RUN ( echo 'production:' && \
     ) > config/database.yml
 
 RUN sed -i -e"s/config.serve_static_assets = false/config.serve_static_assets = true/" config/environments/production.rb
-RUN echo "gem: --no-rdoc --no-ri" > ~/.gemrc
 
 #Bootstrap application
-RUN bundle install &&\
-    /etc/init.d/postgresql start &&\
+RUN /etc/init.d/postgresql start &&\
     bundle exec rake assets:precompile db:create db:migrate kandan:bootstrap &&\
+    bundle exec rake kandan:boot_hubot && \
+    bundle exec rake kandan:hubot_access_key && \
     /etc/init.d/postgresql stop
 
-# Install runner
-RUN wget https://godist.herokuapp.com/projects/ddollar/forego/releases/current/linux-amd64/forego -O /usr/bin/forego; chmod +x  /usr/bin/forego
 # Add postgres to procfile
 RUN echo "db: su postgres -c '/usr/lib/postgresql/9.3/bin/postgres -D /var/lib/postgresql/9.3/main -c config_file=/etc/postgresql/9.3/main/postgresql.conf'" >> Procfile
 # expose data to host for backup
